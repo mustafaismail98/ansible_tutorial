@@ -3,11 +3,36 @@
 - hosts: all
   become: true
   pre_tasks:
-  - name: install update (ubuntu)
+  - name: Update cache (ubuntu)
     tags: always
     apt:
-      upgrade: dist
       update_cache: yes
+    changed_when: false
+
+- hosts: all
+  become: true
+  tasks:
+  - name: add ssh key for simone
+    tags: always
+    authorized_key:
+      user: simone
+      key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDRc0Z36Wp1B4hOQ49Iv2Lr0w0JMwcGEnRSGElER4ozL ansible"
+
+
+- hosts: workstations
+  become: true
+  tasks:
+  - name: install unzip
+    package:
+      name: unzip
+  - name: install terraform
+    unarchive:
+      src: https://releases.hashicorp.com/terraform/0.12.28/terraform_0.12.28_linux_amd64.zip
+      dest: /usr/local/bin
+      remote_src: yes
+      mode: 0755
+      owner: root
+      group: root
 
 - hosts: web_servers
   become: true
@@ -19,6 +44,7 @@
         - apache2
         - libapache2-mod-php
       state: latest
+
   - name: copy default html file for site
     tags: apache, apache2, httpd
     copy:
